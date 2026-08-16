@@ -1,0 +1,6 @@
+{
+    "editor.defaultFormatter": "simwai.biome-vscode",
+    "editor.formatOnSave": true,
+    "biome.enable": true,
+    "biome.lint.run": "onSave"
+}

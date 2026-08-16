@@ -1,26 +1,29 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { uk } from 'date-fns/locale';
 import { Button, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
+import DatePicker from '@/components/DatePicker';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Controller, useForm } from 'react-hook-form';
 
 const eventSchema = z.object({
-  category: z.string().min(1, 'Category is required.'),
+  // category: z.string().min(1, 'Category is required.'),
   eventName: z.string().min(1, 'Event name is required.').max(50, 'Event name must be at most 50 characters.'),
-  description: z.string().max(200, 'Description must be at most 200 characters.').default(''),
-  time: z.date(),
+  description: z.string().max(200, 'Description must be at most 200 characters.'),
+  time: z.date().nullable(),
   people: z
     .number({ error: 'Please enter a valid number.' })
     .int('Number of people must be a whole number.')
     .min(1, 'At least 1 person is required.'),
 });
 
-type FormValues = z.input<typeof eventSchema>;
-type SubmitValues = z.output<typeof eventSchema>;
+type FormValues = z.output<typeof eventSchema>;
+type SubmitValues = FormValues;
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -53,11 +56,11 @@ export default function TabTwoScreen() {
   const { handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      category: '',
+      // category: '',
       eventName: '',
       description: '',
-      time: new Date(),
-      people: 0,
+      time: null,
+      people: 1,
     },
   });
 
@@ -69,6 +72,20 @@ export default function TabTwoScreen() {
       contentInset={insets}
       contentContainerStyle={[contentPlatformStyle, styles.contentContainer]}>
       <ThemedView style={styles.formView}>
+        {/* <Controller
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              placeholder="Category"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              style={styles.field}
+            />
+          )}
+          name="category"
+        /> */}
+
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
@@ -106,9 +123,9 @@ export default function TabTwoScreen() {
               placeholder="Number of People"
               onBlur={onBlur}
               onChangeText={(text) => {
-                // Strip non-digits, then pass a real number (or NaN) to the form
+                // Strip non-digits, then pass a real number (default 0)
                 const digits = text.replace(/[^0-9]/g, '');
-                onChange(digits === '' ? null : Number(digits));
+                onChange(digits === '' ? 0 : Number(digits));
               }}
               value={value === null ? '' : String(value)}
               keyboardType="numeric"
@@ -119,6 +136,18 @@ export default function TabTwoScreen() {
           name="people"
         />
         {errors.people && <Text style={styles.error}>{errors.people.message}</Text>}
+
+        <Controller
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <DatePicker
+              title={!!value ? format(value, "dd MMM yyyy HH:mm", { locale: uk }) : "Select Date and Time"}
+              onChange={onChange}
+              value={value}
+            />
+          )}
+          name="time"
+        />
 
         <Button title="Submit" onPress={handleSubmit(onSubmit)} />
       </ThemedView>
@@ -132,6 +161,12 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingTop: Spacing.six,
+  },
+  TextInput: {
+    borderWidth: 1,
+    color: '#f0eeee',
+    borderRadius: 4,
+    padding: Spacing.two,
   },
   formView: {
     maxWidth: 600,
@@ -148,6 +183,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     padding: Spacing.two,
+    color: '#fefefe',
   },
   error: {
     color: '#e53e3e',

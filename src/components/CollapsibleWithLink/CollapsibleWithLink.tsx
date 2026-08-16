@@ -1,11 +1,12 @@
 import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
 import { Collapsible } from '@/components/ui/collapsible';
+import { Href } from 'expo-router';
 import type { ReactNode } from 'react';
 
 type CollapsibleWithLinkProps = {
   title: string;
-  link: string;
+  link: Href & string;
   children: ReactNode;
 };
 
