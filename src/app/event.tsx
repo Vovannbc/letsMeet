@@ -1,18 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { Button, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { Alert, Button, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import DatePicker from '@/components/DatePicker';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useCreateMeet } from '@/hooks/use-create-meet';
 import { useTheme } from '@/hooks/use-theme';
 import { Controller, useForm } from 'react-hook-form';
+import { ThemedTextInput } from "@/components/themed-input";
 
 const eventSchema = z.object({
-  // category: z.string().min(1, 'Category is required.'),
+  category: z.string().min(1, 'Category is required.'),
   eventName: z.string().min(1, 'Event name is required.').max(50, 'Event name must be at most 50 characters.'),
   description: z.string().max(200, 'Description must be at most 200 characters.'),
   time: z.date().nullable(),
@@ -23,7 +25,6 @@ const eventSchema = z.object({
 });
 
 type FormValues = z.output<typeof eventSchema>;
-type SubmitValues = FormValues;
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -53,10 +54,10 @@ export default function TabTwoScreen() {
 
   const theme = useTheme();
 
-  const { handleSubmit, control, formState: { errors } } = useForm<FormValues>({
+  const { handleSubmit, control, formState: { errors }, reset } = useForm<FormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      // category: '',
+      category: '',
       eventName: '',
       description: '',
       time: null,
@@ -64,7 +65,19 @@ export default function TabTwoScreen() {
     },
   });
 
-  const onSubmit = (data: SubmitValues) => console.log(data);
+  const { mutate: createMeet, isPending } = useCreateMeet();
+
+  const onSubmit = (data: FormValues) => {
+    createMeet(data, {
+      onSuccess: () => {
+        reset();
+        Alert.alert('Success', 'Event created successfully!');
+      },
+      onError: (error) => {
+        Alert.alert('Error', error.message);
+      },
+    });
+  };
 
   return (
     <ScrollView
@@ -72,10 +85,10 @@ export default function TabTwoScreen() {
       contentInset={insets}
       contentContainerStyle={[contentPlatformStyle, styles.contentContainer]}>
       <ThemedView style={styles.formView}>
-        {/* <Controller
+        <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
+            <ThemedTextInput
               placeholder="Category"
               onBlur={onBlur}
               onChangeText={onChange}
@@ -84,12 +97,12 @@ export default function TabTwoScreen() {
             />
           )}
           name="category"
-        /> */}
+        />
 
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
+            <ThemedTextInput
               placeholder="Event Name"
               onBlur={onBlur}
               onChangeText={onChange}
@@ -104,7 +117,7 @@ export default function TabTwoScreen() {
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
+            <ThemedTextInput
               placeholder="Description"
               onBlur={onBlur}
               onChangeText={onChange}
@@ -119,11 +132,10 @@ export default function TabTwoScreen() {
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
+            <ThemedTextInput
               placeholder="Number of People"
               onBlur={onBlur}
               onChangeText={(text) => {
-                // Strip non-digits, then pass a real number (default 0)
                 const digits = text.replace(/[^0-9]/g, '');
                 onChange(digits === '' ? 0 : Number(digits));
               }}
@@ -149,7 +161,11 @@ export default function TabTwoScreen() {
           name="time"
         />
 
-        <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+        <Button
+          title={isPending ? 'Submitting…' : 'Submit'}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isPending}
+        />
       </ThemedView>
     </ScrollView>
   );
@@ -183,7 +199,6 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     padding: Spacing.two,
-    color: '#fefefe',
   },
   error: {
     color: '#e53e3e',
