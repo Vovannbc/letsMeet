@@ -1,8 +1,8 @@
-import { ExternalLink } from '@/components/external-link';
-import { ThemedText } from '@/components/themed-text';
-import { Collapsible } from '@/components/ui/collapsible';
-import { Href } from 'expo-router';
-import type { ReactNode } from 'react';
+import { ExternalLink } from "@/components/external-link";
+import { ThemedText } from "@/components/themed-text";
+import { Collapsible } from "@/components/ui/collapsible";
+import { Href } from "expo-router";
+import type { ReactNode } from "react";
 
 type CollapsibleWithLinkProps = {
   title: string;
@@ -10,7 +10,11 @@ type CollapsibleWithLinkProps = {
   children: ReactNode;
 };
 
-export default function CollapsibleWithLink({ title, link, children }: CollapsibleWithLinkProps) {
+export default function CollapsibleWithLink({
+  title,
+  link,
+  children,
+}: CollapsibleWithLinkProps) {
   return (
     <Collapsible title={title}>
       {children}
